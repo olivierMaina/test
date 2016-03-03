@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>My first column chart by Highcharts</title>
+        <!-- add json  -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/json2/20150503/json2.min.js"></script>
+        <!-- 1. Add JQuery and Highcharts in the head of your page -->
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+        <script src="http://code.highcharts.com/highcharts.js"></script>
+        <!-- 2. You can add print and export feature by adding this line -->
+        <script src="http://code.highcharts.com/modules/exporting.js"></script>
+        <script type="text/javascript">
+  var timeout = setTimeout("location.reload(true);",20000);
+  function resetTimeout() {
+    clearTimeout(timeout);
+    timeout = setTimeout("location.reload(true);",20000);
+  }
+</script>
+         
+         
+        <!-- 3. Add the JavaScript with the Highchart options to initialize the chart -->
+        <script type="text/javascript">
+         var timeStamp = [];
+         var valueX = [];
+
+         function loadJSON(){
+            //var data_file = "http://www.tutorialspoint.com/json/data.json";
+            var data_file = "http://173.39.250.40:4242/api/query?start=1h-ago&m=avg:placemeter.all{host=6179,class=direction_1}"
+            var http_request = new XMLHttpRequest();
+            
+
+            try{
+               // Opera 8.0+, Firefox, Chrome, Safari
+               http_request = new XMLHttpRequest();
+            }catch (e){
+               // Internet Explorer Browsers
+               try{
+                  http_request = new ActiveXObject("Msxml2.XMLHTTP");
+                    
+               }catch (e) {
+                
+                  try{
+                     http_request = new ActiveXObject("Microsoft.XMLHTTP");
+                  }catch (e){
+                     // Something went wrong
+                     alert("Your browser broke!");
+                     return false;
+                  }
+                    
+               }
+            }
+            
+            http_request.onreadystatechange = function(){
+            
+               //if (http_request.readyState == 4  )
+               if (http_request.readyState){
+                  // Javascript function JSON.parse to parse JSON data
+                  var jsonObj = JSON.parse(http_request.responseText);
+                  
+
+                  var dps = JSON.stringify(jsonObj[0].dps);
+                  //document.writeln(jsonObj[0].tags.host + '<br>');
+                  //document.writeln(jsonObj[0].tags.class + '<br>');
+                  dps = dps.replace('}','');
+                  dps = dps.replace('{','');
+                  //document.writeln(dps);
+                  var dps_split = dps.split(",");
+               for (var i = 0; i < dps_split.length; i++) {
+                  //document.writeln(dps_split[i]);
+                  var dps_split_split = dps_split[i].split(':');
+                  dps_timestamp = dps_split_split[0]
+                  dps_value = dps_split_split[1];
+
+                  //remove quote in the time stamp string
+                  dps_timestamp = dps_timestamp.replace('\"','');
+                  dps_timestamp = dps_timestamp.replace('\"','');
+                  // convert value and timestamp in int
+                    var dpsValue = parseInt(dps_value,10);
+                    var dpsTimestamp = parseInt(dps_timestamp,10);
+                    
+                             
+                    var date = new Date(dpsTimestamp*1000);
+
+                    var hour = date.getHours();
+                    var minute = date.getMinutes();
+                    var second = date.getSeconds();
+                    var formatdate = hour + ':' + minute + ':' + second;
+                    
+
+
+                  //add value and timestamp in the arrays
+                    timeStamp.push(date);
+                  //timeStamp.push(dps_timestamp);
+                  valueX.push(dps_value * 10);
+                 // document.writeln("<br>");
+                  //document.writeln(timeStamp);
+                 // document.writeln(dps_timestamp);
+                  //document.writeln("<br>");
+                  //document.writeln(dpsValue);
+                  //document.writeln("<br>");
+
+               };
+
+               //document.writeln(valueX);
+               //document.writeln(timeStamp);
+                  $('#container').highcharts({
+                    chart: {
+                            zoomType: 'x'
+                            },
+                    title: {
+                            text: 'AVG NUMBER OF PEDESTRIAN AT LAT: 48.8483899, LON: 2.3957845 HEADING DIRECTION_1'
+                            },
+                    subtitle: {
+                            text: document.ontouchstart === undefined ?
+                        'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+                            },
+                    xAxis: {
+                        type: 'datetime',
+
+                        title: {
+                            text: 'Timestamp'
+                            },
+                        categories: timeStamp
+                            },
+                    yAxis: {
+                        title: {
+                            text: 'Avg num of pedestrian *10'
+                            }
+                            },
+                    legend: {
+                        borderWidth: 1
+                            },
+                  plotOptions: {
+                area: {
+                    fillColor: {
+                        linearGradient: {
+                            x1: 0,
+                            y1: 0,
+                            x2: 0,
+                            y2: 1
+                        },
+                        stops: [
+                            [0, Highcharts.getOptions().colors[0]],
+                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                        ]
+                    },
+                    marker: {
+                        radius: 2
+                    },
+                    lineWidth: 1,
+                    states: {
+                        hover: {
+                            lineWidth: 1
+                        }
+                    },
+                    threshold: null
+                }
+            },
+       
+                    series: [{
+                        type:'area',
+                        name: 'Num of Person',
+                        data: valueX
+                    }]
+                });
+
+               }
+               
+            }
+           // document.writeln(valueX);
+            http_request.open("GET", data_file, true);
+            http_request.send();
+
+         };
+         
+
+
+     //document.writeln(valueX);
+           
+      </script>
+         
+    </head>
+    <body onload="loadJSON()">
+         
+        <!-- 3. Add the container -->
+        <div id="container" style="width: 900px; height: 900px; margin: 0 auto"></div> 
+        <div class = "central"><button type = "button" onclick = "loadJSON()">Update Data </button></div>     
+                 
+    </body>
+</html>
